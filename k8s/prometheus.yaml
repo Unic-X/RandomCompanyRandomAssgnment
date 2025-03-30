@@ -11,8 +11,9 @@ data:
     
     scrape_configs:
       - job_name: 'slow-server'
+        metrics_path: '/metrics'
         static_configs:
-          - targets: ['slow-server:80']
+          - targets: ['slow-server:8080']
 ---
 apiVersion: apps/v1
 kind: Deployment

@@ -12,26 +12,21 @@ import (
 // LoggingMiddleware logs request information and timing
 func ApplyLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Generate request ID if not present
 		requestID := r.Header.Get("X-Request-ID")
 		if requestID == "" {
 			requestID = uuid.New().String()
 			r.Header.Set("X-Request-ID", requestID)
 		}
 
-		// Log request start
 		startTime := time.Now()
 		method := r.Method
 		path := r.URL.Path
 		log.Infof("[%s] Started %s %s", requestID, method, path)
 
-		// Create a custom response writer to capture status code
 		lrw := newLoggingResponseWriter(w)
 
-		// Call the next handler
 		next.ServeHTTP(lrw, r)
 
-		// Log request completion
 		duration := time.Since(startTime)
 		statusCode := lrw.statusCode
 		log.Infof("[%s] Completed %s %s %d %s in %v", 
@@ -39,7 +34,6 @@ func ApplyLoggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// MetricsMiddleware collects metrics about requests
 func ApplyMetricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
