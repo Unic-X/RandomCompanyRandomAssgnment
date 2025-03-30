@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slow-server
+  namespace: slow-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: slow-server
+  template:
+    metadata:
+      labels:
+        app: slow-server
+    spec:
+      containers:
+      - name: slow-server
+        image: slow-server:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SERVER_PORT
+          value: "8080"
+        - name: MIN_DELAY
+          value: "500"
+        - name: MAX_DELAY
+          value: "3000"
+        - name: SIMULATE_ERRORS
+          value: "true"
+        - name: ERROR_RATE
+          value: "0.15"
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slow-server
+  namespace: slow-server
+  labels:
+    app: slow-server
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: slow-server
