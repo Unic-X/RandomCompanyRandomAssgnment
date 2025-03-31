@@ -6,3 +6,5 @@ resources:
   - slow-server.yaml
   - prometheus.yaml
   - grafana.yaml
+  - loki.yaml
+  - loki-config.yaml

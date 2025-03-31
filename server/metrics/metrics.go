@@ -93,4 +93,12 @@ var (
 			Help: "Total number of processing errors",
 		},
 	)
+
+	LogsTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "logs_total",
+			Help: "Total number of logs by level",
+		},
+		[]string{"level"},
+	)
 )

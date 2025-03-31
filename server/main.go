@@ -5,12 +5,17 @@ import (
 
 	"github.com/Unic-X/slow-server/api"
 	"github.com/Unic-X/slow-server/config"
+	"github.com/Unic-X/slow-server/logger"
 	"github.com/Unic-X/slow-server/middleware"
 	"github.com/charmbracelet/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+
 func main() {
+	// Initialize the logger
+    go logger.InitLogger()
+	
 	// Load configuration
 	cfg := config.LoadConfig()
 
@@ -27,9 +32,9 @@ func main() {
 	wrappedRouter = middleware.ApplyLoggingMiddleware(wrappedRouter)
 
 	// Start server
-	log.Infof("Starting server on port %v",cfg.Port)
+	log.Info("Starting server on port", "port", cfg.PortString())
 	err := http.ListenAndServe(":"+cfg.PortString(), wrappedRouter)
 	if err != nil {
-		log.Fatal("Server failed to start: %v", err)
+		log.Fatal("Server failed to start", "error", err)
 	}
 }

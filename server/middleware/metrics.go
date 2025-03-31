@@ -1,17 +1,22 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
-	"github.com/Unic-X/slow-server/metrics"
 	"time"
 
+	"github.com/Unic-X/slow-server/logger"
+	"github.com/Unic-X/slow-server/metrics"
+	"github.com/vedadiyan/lokiclient"
+
 	"github.com/google/uuid"
-	"github.com/charmbracelet/log"
 )
 
 // LoggingMiddleware logs request information and timing
 func ApplyLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log := logger.GetLogger()
+		
 		requestID := r.Header.Get("X-Request-ID")
 		if requestID == "" {
 			requestID = uuid.New().String()
@@ -21,7 +26,6 @@ func ApplyLoggingMiddleware(next http.Handler) http.Handler {
 		startTime := time.Now()
 		method := r.Method
 		path := r.URL.Path
-		log.Infof("[%s] Started %s %s", requestID, method, path)
 
 		lrw := newLoggingResponseWriter(w)
 
@@ -29,13 +33,22 @@ func ApplyLoggingMiddleware(next http.Handler) http.Handler {
 
 		duration := time.Since(startTime)
 		statusCode := lrw.statusCode
-		log.Infof("[%s] Completed %s %s %d %s in %v", 
-			requestID, method, path, statusCode, http.StatusText(statusCode), duration)
-	})
+
+        customStream := lokiclient.NewStreamCustom(map[string]string{
+            "requestID": requestID, 
+            "method": method, 
+            "path": path, 
+            "status": string(statusCode), 
+            "statusText": http.StatusText(statusCode), 
+            "duration":duration.String(),
+        })
+		log.Info(context.Background(),customStream,"Info Related to this")
+    })
 }
 
 func ApplyMetricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        log := logger.GetLogger()
 		startTime := time.Now()
 		
 		// Create a custom response writer to capture status code
@@ -58,23 +71,22 @@ func ApplyMetricsMiddleware(next http.Handler) http.Handler {
 		
 		// Track error rates
 		if statusCode >= 400 {
+            stream := lokiclient.NewStream("slow-server", "middleware", "ApplyMetricsMiddleware", "trace123")
+            log.Info(context.Background(), stream, "Status Code 400 :<")
 			metrics.RequestErrors.WithLabelValues(path, method, string(statusCode)).Inc()
 		}
 	})
 }
 
-// loggingResponseWriter is a custom response writer that captures status code
 type loggingResponseWriter struct {
 	http.ResponseWriter
 	statusCode int
 }
 
-// newLoggingResponseWriter creates a new logging response writer
 func newLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
 	return &loggingResponseWriter{w, http.StatusOK}
 }
 
-// WriteHeader captures the status code
 func (lrw *loggingResponseWriter) WriteHeader(code int) {
 	lrw.statusCode = code
 	lrw.ResponseWriter.WriteHeader(code)

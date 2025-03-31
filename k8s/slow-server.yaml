@@ -12,11 +12,14 @@ spec:
     metadata:
       labels:
         app: slow-server
+      annotations:
+        # This annotation will be updated by the deploy script to force pod recreation
+        rollme: "20250331155616"
     spec:
       containers:
       - name: slow-server
-        image: slow-server:latest
-        imagePullPolicy: Never
+        image: slow-server:20250331155616
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
@@ -30,6 +33,8 @@ spec:
           value: "true"
         - name: ERROR_RATE
           value: "0.15"
+        - name: LOKI_URL
+          value: "http://loki:3100/loki/api/v1/push"
         resources:
           limits:
             cpu: "500m"
