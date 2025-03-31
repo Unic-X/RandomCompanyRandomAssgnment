@@ -3,11 +3,18 @@
 A Sample Go server that intentionally
 simulates high response times and errors for monitoring, and observability demonstrations.
 
-For this this project uses Docker Container running inside a K8 cluster
-that contains 2 Public facing services(Grafana Dashboard, application server) and a private
-node for Prometheus. (This is not working as expected :()
+This project uses Docker Containers running inside a K8 cluster
+that contains 2 Public facing services(Grafana Dashboard, application server) and private nodes for Prometheus and Loki. 
 
-All the K8 Config is included in respective directories.
+Added Metrics Screenshot:
+
+![Image](./images/metrics.png)
+
+High Level Design: 
+
+![Image](./images/HLD.png)
+
+All the K8 Config is included in k8s/ directory.
 ## Getting Started
 
 ### Prerequisites
